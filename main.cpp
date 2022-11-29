@@ -2,12 +2,14 @@
 #define local_ip "" 
 #define tello_state_port 8890
 #define tello_ip "192.168.10.1"
+#define tello_port 8889
 
 
 #include <winsock2.h>
 #include <iostream>
 #pragma comment(lib, "Ws2_32.lib")
 #include <Ws2tcpip.h>
+#include <thread>
 
 int main() 
 {
@@ -44,6 +46,20 @@ int main()
 	cout << "After call inet_pton: " << inet_pton << endl;
 	cout << "client_addr.sin_addr.s_addr: " << client_addr.sin_addr.s_addr << endl;
 
+	/* Defining the server address structure */
+	struct sockaddr_in server_addr = {};
+	cout << "Before calling server_addr.sin_addr\n ";
+	cout << "server_addr.sin_addr: " << &server_addr.sin_addr << endl;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(tello_port); // convert the port value to hex 
+	inet_pton(AF_INET, tello_ip, &server_addr.sin_addr);
+
+	this_thread::sleep_for(chrono::duration<double>(2));
+	cout << "After calling server_addr.sin_addr\n ";
+	cout << "server_addr.sin_addr: " << &server_addr.sin_addr << endl;
+
+
+
 	socket_tello = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); //socket(IPv4, socket type using UDP, The UDP)
 	cout << "Creating a socket... " << endl;
 	cout << "AF_INET: " << AF_INET << endl;
@@ -60,5 +76,17 @@ int main()
 		cout << "Socket successfully created" << endl;
 	}
 	cout << "INVALID_SOCKET: " << INVALID_SOCKET << endl;
+
+
+	/* Bind to socket */
+	this_thread::sleep_for(chrono::duration<double>(2));
+	cout << "Binding local address with socket: " << endl;
+	/* Binding the socket to the local address and port */
+	if (::bind(socket_tello, (sockaddr*)&client_addr, sizeof(client_addr)) == SOCKET_ERROR)
+	{
+		cout << "Binding of socket failed with error code: " << WSAGetLastError() << endl;
+	}
+	cout << "Binding successful" << endl;
+
 	return 0;
 }
